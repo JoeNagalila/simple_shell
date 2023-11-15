@@ -1,23 +1,38 @@
-#include <stdio.h>
-#include <unistd.h>
+#include "header.h"
 
 /**
- * main - Entry point
+ * execute_and_wait - executes a command and waits for its completion
+ * @command_path: path command to execute
+ * @tokens: array of commandline arguments
+ * @e_status: pointer to store exit status of the command
  *
- * Description: Prints the process ID and the sum of three integers.
- * Returns: Always 0 (Success)
+ * Return: 0 when succeful else 1
  */
-int main(void)
+
+int execute_and_wait(char *command_path, char **tokens, int *e_status)
 {
-    int a = 8;
-    int b = 7;
-    int c = 5;
+	pid_t pid;
+	int status;
 
-    int sum = a + b + c;
-    pid_t pid = getpid();
-
-    printf("Process ID is %d\n", pid);
-    printf("Sum of a, b, and c is %d\n", sum);
-
-    return(0);
+	pid = fork();
+	if (pid == -1)
+	{
+		perror("Error");
+		return (-1);
+	}
+	if (pid == 0)
+	{
+		execve(command_path, tokens, environ);
+		perror("Execve");
+		exit(2);
+	}
+	else
+	{
+		wait(&status);
+		if (WIFEXITED(status))
+			*e_status = WEXITSTATUS(status);
+		else
+			*e_status = -1;
+	}
+	return (0);
 }
